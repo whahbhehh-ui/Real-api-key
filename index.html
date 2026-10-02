@@ -3,475 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REAL HUB - Samurai Login & Key Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>AttackHub Admin Panel - Pro (2-Tier Login)</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        body {
-            font-family: 'Prompt', sans-serif;
-            background-color: #050507;
-            color: #f3f4f6;
-            overflow-x: hidden;
-        }
-        .samurai-card {
-            background: rgba(15, 15, 20, 0.88);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(220, 38, 38, 0.25);
-            box-shadow: 0 10px 30px -10px rgba(220, 38, 38, 0.3);
-        }
-        .red-glow {
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
-        }
-        /* Sakura Petals Animation */
-        .sakura-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 0;
-        }
-        .petal {
-            position: absolute;
-            background: linear-gradient(135deg, #ffb7c5 0%, #ff69b4 100%);
-            border-radius: 150% 0 150% 0;
-            opacity: 0.7;
-            animation: fall linear infinite;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0.8; }
-            50% { transform: translateY(50vh) translateX(50px) rotate(180deg); opacity: 0.5; }
-            100% { transform: translateY(110vh) translateX(-50px) rotate(360deg); opacity: 0; }
-        }
+        body { background-color: #09090b; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding-top: 30px; margin: 0; }
+        .container { background-color: #18181b; padding: 25px; border-radius: 16px; width: 480px; border: 1px solid #27272a; box-sizing: border-box; }
+        h2 { margin-bottom: 15px; color: #3b82f6; text-align: center; }
+        label { display: block; font-size: 12px; margin-bottom: 5px; color: #a1a1aa; }
+        input, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #3f3f46; background: #27272a; color: white; box-sizing: border-box; }
+        button { background-color: #3b82f6; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #2563eb; }
+        table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #27272a; padding: 8px; text-align: left; word-break: break-all; }
+        th { background: #27272a; color: #3b82f6; }
+        .btn-danger { background-color: #ef4444; width: auto; padding: 4px 8px; font-size: 10px; margin: 0; }
+        .btn-warning { background-color: #f59e0b; width: auto; padding: 4px 8px; font-size: 10px; margin: 2px 0; }
+        .error-msg { color: #ef4444; font-size: 11px; text-align: center; margin-bottom: 10px; display: none; }
     </style>
 </head>
-<body class="relative min-h-screen">
+<body>
 
-    <!-- Sakura Petals Background Effect -->
-    <div class="sakura-container" id="sakuraContainer"></div>
-
-    <!-- LOGIN SCREEN (2 Tiers) -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-        <div class="samurai-card w-full max-w-md p-8 rounded-3xl border border-red-600/50 red-glow text-center">
-            <img src="https://i.postimg.cc/qg8hrLc7/qg8hrLc7.png" alt="Real Hub Logo" class="w-20 h-20 object-cover rounded-2xl border-2 border-red-600 red-glow mx-auto mb-4">
-            <h2 class="text-2xl font-bold text-white tracking-wider mb-1">REAL HUB <span class="text-red-500">ADMIN</span></h2>
-            <p class="text-xs text-red-400 tracking-widest mb-6">SECURE TWO-TIER LOGIN SYSTEM</p>
-            
-            <div class="space-y-4 text-left">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1"><i class="fa-solid fa-lock text-red-500 mr-1"></i> รหัสผ่านชั้นที่ 1 (User / Tier 1)</label>
-                    <input type="password" id="tier1Input" placeholder="กรอกรหัสผ่านชั้นที่ 1..." class="w-full bg-black/50 border border-red-900/50 rounded-xl p-3 text-sm text-white focus:border-red-600 focus:outline-none transition">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1"><i class="fa-solid fa-shield-halved text-red-500 mr-1"></i> รหัสผ่านชั้นที่ 2 (Admin / Tier 2)</label>
-                    <input type="password" id="tier2Input" placeholder="กรอกรหัสผ่านชั้นที่ 2..." class="w-full bg-black/50 border border-red-900/50 rounded-xl p-3 text-sm text-white focus:border-red-600 focus:outline-none transition">
-                </div>
-                <div id="loginError" class="text-rose-400 text-xs text-center hidden font-medium">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</div>
-                <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-red-900/50 transition">
-                    เข้าสู่ระบบแผงควบคุม
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN DASHBOARD (Hidden until logged in) -->
-    <div id="mainDashboard" class="relative z-10 max-w-7xl mx-auto px-4 py-8 hidden">
+<div class="container">
+    <!-- หน้าล็อคอิน 2 ชั้น -->
+    <div id="loginPanel">
+        <h2>Admin Login (2-Tier)</h2>
+        <label>รหัสผ่านชั้นที่ 1:</label>
+        <input type="password" id="tier1Password" placeholder="ใส่รหัสผ่านชั้นที่ 1...">
         
-        <!-- Header / Logo Section -->
-        <header class="flex flex-col md:flex-row items-center justify-between gap-4 mb-10 pb-6 border-b border-red-900/40">
-            <div class="flex items-center gap-4">
-                <img src="https://i.postimg.cc/qg8hrLc7/qg8hrLc7.png" alt="Real Hub Logo" class="w-16 h-16 object-cover rounded-xl border-2 border-red-600 red-glow">
-                <div>
-                    <h1 class="text-3xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-300 to-white">
-                        REAL HUB <span class="text-xs px-2 py-1 bg-red-900/60 text-red-300 rounded border border-red-700 ml-2">SAMURAI v5.0</span>
-                    </h1>
-                    <p class="text-xs text-red-400 tracking-widest mt-1">ADVANCED KEY & HWID MANAGEMENT SYSTEM</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="openCreateModal()" class="bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-red-900/50 transition-all flex items-center gap-2 border border-red-500/40">
-                    <i class="fa-solid fa-key"></i> สร้าง Key ใหม่
-                </button>
-                <button onclick="handleLogout()" class="bg-red-950/40 hover:bg-red-900/60 border border-red-800 text-red-300 px-4 py-2.5 rounded-xl text-sm transition" title="ออกจากระบบ">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="samurai-card p-5 rounded-2xl border-l-4 border-l-red-600">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-400 font-medium">คีย์ทั้งหมด</p>
-                        <h3 class="text-2xl font-bold mt-1 text-white" id="statTotal">0</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-red-950/60 rounded-xl flex items-center justify-center text-red-500 border border-red-900">
-                        <i class="fa-solid fa-database text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="samurai-card p-5 rounded-2xl border-l-4 border-l-emerald-600">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-400 font-medium">กำลังใช้งานอยู่</p>
-                        <h3 class="text-2xl font-bold mt-1 text-emerald-400" id="statActive">0</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-emerald-950/60 rounded-xl flex items-center justify-center text-emerald-500 border border-emerald-900">
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="samurai-card p-5 rounded-2xl border-l-4 border-l-amber-600">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-400 font-medium">ยังไม่ถูกใช้งาน (รอนับเวลา)</p>
-                        <h3 class="text-2xl font-bold mt-1 text-amber-400" id="statUnused">0</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-amber-950/60 rounded-xl flex items-center justify-center text-amber-500 border border-amber-900">
-                        <i class="fa-solid fa-clock text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="samurai-card p-5 rounded-2xl border-l-4 border-l-rose-600">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-400 font-medium">หมดอายุแล้ว</p>
-                        <h3 class="text-2xl font-bold mt-1 text-rose-400" id="statExpired">0</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-rose-950/60 rounded-xl flex items-center justify-center text-rose-500 border border-rose-900">
-                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls & Search -->
-        <div class="samurai-card p-4 rounded-2xl mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div class="relative w-full md:w-96">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
-                <input type="text" id="searchInput" oninput="renderTable()" placeholder="ค้นหา Key, Note หรือ HWID..." class="w-full bg-black/40 border border-red-900/40 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-600 transition">
-            </div>
-            <div class="flex gap-2 w-full md:w-auto">
-                <select id="filterStatus" onchange="renderTable()" class="bg-black/40 border border-red-900/40 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-600 transition">
-                    <option value="all">สถานะทั้งหมด</option>
-                    <option value="active">ใช้งานอยู่</option>
-                    <option value="unused">ยังไม่ใช้งาน</option>
-                    <option value="expired">หมดอายุแล้ว</option>
-                </select>
-                <button onclick="clearAllKeys()" class="bg-red-950/40 hover:bg-red-900/60 border border-red-800 text-red-300 px-4 py-2.5 rounded-xl text-sm transition">
-                    <i class="fa-solid fa-trash-can mr-1"></i> ล้างทั้งหมด
-                </button>
-            </div>
-        </div>
-
-        <!-- Keys Table -->
-        <div class="samurai-card rounded-2xl overflow-hidden shadow-2xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-red-950/50 border-b border-red-900/40 text-xs text-red-300 uppercase tracking-wider">
-                            <th class="p-4">Key / Note</th>
-                            <th class="p-4">อายุการใช้งาน</th>
-                            <th class="p-4">สถานะ</th>
-                            <th class="p-4">HWID เครื่องที่ผูก</th>
-                            <th class="p-4">เวลาคีย์ / นับถอยหลัง</th>
-                            <th class="p-4 text-center">จัดการ (รีเซ็ต HWID / รีเซ็ตเวลา / ลบ)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="keyTableBody" class="divide-y divide-red-950/50 text-sm">
-                        <!-- Dynamic Rows -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+        <label>รหัสผ่านชั้นที่ 2:</label>
+        <input type="password" id="tier2Password" placeholder="ใส่รหัสผ่านชั้นที่ 2...">
+        
+        <div id="loginError" class="error-msg">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง!</div>
+        <button onclick="login()">เข้าสู่ระบบ</button>
     </div>
 
-    <!-- Create Key Modal -->
-    <div id="createModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="samurai-card w-full max-w-md p-6 rounded-2xl border border-red-600/50 relative">
-            <button onclick="closeCreateModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-xl font-bold text-red-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-key"></i> สร้าง Key ใหม่</h3>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">ระยะเวลาคีย์</label>
-                    <select id="keyDuration" class="w-full bg-black/50 border border-red-900/50 rounded-xl p-3 text-sm text-white focus:border-red-600 focus:outline-none">
-                        <option value="1">1 วัน</option>
-                        <option value="2">2 วัน</option>
-                        <option value="3">3 วัน</option>
-                        <option value="4">4 วัน</option>
-                        <option value="5">5 วัน</option>
-                        <option value="10">10 วัน</option>
-                        <option value="30">30 วัน</option>
-                        <option value="0">ถาวร (Permanent)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">จำนวนที่ต้องการสร้าง</label>
-                    <input type="number" id="keyAmount" min="1" max="50" value="1" class="w-full bg-black/50 border border-red-900/50 rounded-xl p-3 text-sm text-white focus:border-red-600 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">บันทึกช่วยจำ (Note / Prefix)</label>
-                    <input type="text" id="keyNote" placeholder="เช่น สำหรับแจกยูทูป, VIP" class="w-full bg-black/50 border border-red-900/50 rounded-xl p-3 text-sm text-white focus:border-red-600 focus:outline-none">
-                </div>
-                <button onclick="generateKeys()" class="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-red-900/50 transition">
-                    ยืนยันการสร้าง Key
-                </button>
-            </div>
+    <!-- หน้าจัดการคีย์ -->
+    <div id="adminPanel" style="display:none;">
+        <h2>AttackHub Key Management</h2>
+        
+        <label>เลือกอายุของคีย์:</label>
+        <select id="keyDuration">
+            <option value="1">1 วัน</option>
+            <option value="5">5 วัน</option>
+            <option value="7" selected>7 วัน</option>
+            <option value="30">30 วัน</option>
+            <option value="0">ถาวร (ไม่มีวันหมดอายุ)</option>
+        </select>
+        <button onclick="createKey()">สร้างคีย์ใหม่</button>
+
+        <h3 style="font-size: 14px; margin-top: 20px;">รายการคีย์ทั้งหมดในระบบ</h3>
+        <div style="max-height: 350px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>คีย์ / สถานะ</th>
+                        <th>รายละเอียด / HWID</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="keyList">
+                    <!-- โหลดข้อมูลจาก Firebase -->
+                </tbody>
+            </table>
         </div>
+        <button onclick="logout()" style="background-color: #3f3f46; margin-top: 15px;">ออกจากระบบ</button>
     </div>
+</div>
 
-    <!-- Script JavaScript -->
-    <script>
-        // Generate Sakura Petals
-        const sakuraContainer = document.getElementById('sakuraContainer');
-        const petalCount = 25;
-        for (let i = 0; i < petalCount; i++) {
-            const petal = document.createElement('div');
-            petal.classList.add('petal');
-            petal.style.left = Math.random() * 100 + 'vw';
-            petal.style.top = -Math.random() * 20 + 'vh';
-            const size = Math.random() * 8 + 8;
-            petal.style.width = size + 'px';
-            petal.style.height = size * 1.4 + 'px';
-            petal.style.animationDuration = (Math.random() * 6 + 4) + 's';
-            petal.style.animationDelay = (Math.random() * 5) + 's';
-            sakuraContainer.appendChild(petal);
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB6y2HzVlbIIy1b5DjCllTwfftyLYZYWew",
+        authDomain: "attackhubkey.firebaseapp.com",
+        databaseURL: "https://attackhubkey-default-rtdb.firebaseio.com",
+        projectId: "attackhubkey",
+        storageBucket: "attackhubkey.firebasestorage.app",
+        messagingSenderId: "524557895372",
+        appId: "1:524557895372:web:edf9b64cac64f4f27be469"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const TIER1_PASS = "9_atikun";
+    const TIER2_PASS = "0637318831Nn";
+
+    // ตรวจสอบสถานะการล็อกอินค้างไว้ในเบราว์เซอร์
+    window.onload = function() {
+        if (localStorage.getItem("attack_auth") === "true") {
+            document.getElementById("loginPanel").style.display = "none";
+            document.getElementById("adminPanel").style.display = "block";
+            loadKeys();
         }
+    }
 
-        // Login Logic
-        const TIER1_PASS = "9_atikun";
-        const TIER2_PASS = "0637318831Nn";
+    function login() {
+        const t1 = document.getElementById("tier1Password").value;
+        const t2 = document.getElementById("tier2Password").value;
+        const errorEl = document.getElementById("loginError");
 
-        function checkAuth() {
-            if (localStorage.getItem('samurai_auth') === 'true') {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                renderTable();
+        if (t1 === TIER1_PASS && t2 === TIER2_PASS) {
+            localStorage.setItem("attack_auth", "true");
+            document.getElementById("loginPanel").style.display = "none";
+            document.getElementById("adminPanel").style.display = "block";
+            loadKeys();
+        } else {
+            errorEl.style.display = "block";
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("attack_auth");
+        location.reload();
+    }
+
+    function createKey() {
+        const days = parseInt(document.getElementById("keyDuration").value);
+        
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const randomPart = (length) => {
+            let result = "";
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
+            return result;
+        };
+
+        const newKey = "attack-" + randomPart(7) + "-" + randomPart(6) + "-" + randomPart(5) + "-" + randomPart(5);
+        
+        let expireTime = 0;
+        if (days > 0) {
+            expireTime = Date.now() + (days * 86400000);
         }
 
-        function handleLogin() {
-            const t1 = document.getElementById('tier1Input').value;
-            const t2 = document.getElementById('tier2Input').value;
-            const err = document.getElementById('loginError');
+        db.ref('keys/' + newKey).set({
+            key: newKey,
+            expireTime: expireTime,
+            hwid: "",
+            usedAt: ""
+        }).then(() => {
+            alert("สร้างคีย์สำเร็จ: " + newKey);
+        });
+    }
 
-            if (t1 === TIER1_PASS && t2 === TIER2_PASS) {
-                localStorage.setItem('samurai_auth', 'true');
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainDashboard').classList.remove('hidden');
-                renderTable();
-            } else {
-                err.classList.remove('hidden');
-            }
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('samurai_auth');
-            location.reload();
-        }
-
-        checkAuth();
-
-        // Key System Persistent Storage Logic
-        let keysData = JSON.parse(localStorage.getItem('samurai_keys_v5')) || [
-            { id: 1, key: "REAL-SAMURAI-VIP-8892A", note: "VIP Tester", durationDays: 30, activatedAt: Date.now() - 86400000 * 5, expiresAt: Date.now() + 86400000 * 25, hwid: "HWID-USER-99823" },
-            { id: 2, key: "REAL-SAMURAI-FREE-1104B", note: "Free Key (ยังไม่ใช้)", durationDays: 1, activatedAt: null, expiresAt: null, hwid: null },
-            { id: 3, key: "REAL-SAMURAI-PERM-7777X", note: "Permanent Admin", durationDays: 0, activatedAt: Date.now() - 86400000 * 10, expiresAt: null, hwid: "HWID-ADMIN-00112" }
-        ];
-
-        function saveData() {
-            localStorage.setItem('samurai_keys_v5', JSON.stringify(keysData));
-            renderTable();
-        }
-
-        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
-        function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
-
-        function generateKeys() {
-            const duration = parseInt(document.getElementById('keyDuration').value);
-            const amount = parseInt(document.getElementById('keyAmount').value) || 1;
-            const note = document.getElementById('keyNote').value || 'General Key';
-
-            for (let i = 0; i < amount; i++) {
-                const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-                const keyStr = `REAL-${duration === 0 ? 'PERM' : 'KEY'}-${randomStr}`;
-
-                keysData.unshift({
-                    id: Date.now() + i,
-                    key: keyStr,
-                    note: note,
-                    durationDays: duration,
-                    activatedAt: null,
-                    expiresAt: null,
-                    hwid: null
-                });
-            }
-            closeCreateModal();
-            saveData();
-        }
-
-        function deleteKey(id) {
-            keysData = keysData.filter(k => k.id !== id);
-            saveData();
-        }
-
-        function resetHwid(id) {
-            const key = keysData.find(k => k.id === id);
-            if(key) {
-                key.hwid = null;
-                key.activatedAt = null;
-                key.expiresAt = null;
-                saveData();
-                alert('รีเซ็ต HWID และสถานะคีย์สำเร็จ!');
-            }
-        }
-
-        function resetKeyTime(id) {
-            const key = keysData.find(k => k.id === id);
-            if(key) {
-                const now = Date.now();
-                key.activatedAt = now;
-                key.expiresAt = key.durationDays === 0 ? null : now + (key.durationDays * 86400000);
-                saveData();
-                alert('รีเซ็ต/ต่ออายุเวลาคีย์สำเร็จ!');
-            }
-        }
-
-        function clearAllKeys() {
-            if(confirm('คุณต้องการลบข้อมูลคีย์ทั้งหมดใช่หรือไม่?')) {
-                keysData = [];
-                saveData();
-            }
-        }
-
-        function copyKey(text) {
-            navigator.clipboard.writeText(text);
-            alert('คัดลอก Key สำเร็จ: ' + text);
-        }
-
-        function formatTimeRemaining(expiresAt) {
-            const diff = expiresAt - Date.now();
-            if (diff <= 0) return '<span class="text-rose-400 font-semibold">หมดอายุแล้ว</span>';
+    function loadKeys() {
+        db.ref('keys').on('value', (snapshot) => {
+            const list = document.getElementById("keyList");
+            list.innerHTML = "";
+            const data = snapshot.val();
             
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            if (days > 0) {
-                return `เหลือ: ${days}วัน ${hours}ชม. ${minutes}นาที`;
-            } else {
-                return `เหลือ: ${hours}ชม. ${minutes}น. ${seconds}วินาที`;
-            }
-        }
-
-        function renderTable() {
-            if (localStorage.getItem('samurai_auth') !== 'true') return;
-            const tbody = document.getElementById('keyTableBody');
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const filter = document.getElementById('filterStatus').value;
-
-            tbody.innerHTML = '';
-
-            let total = keysData.length;
-            let activeCount = 0;
-            let unusedCount = 0;
-            let expiredCount = 0;
-
-            const filtered = keysData.filter(k => {
-                const isUnused = k.activatedAt === null;
-                const isExpired = k.expiresAt !== null && Date.now() > k.expiresAt;
-
-                if (isUnused) unusedCount++;
-                else if (isExpired) expiredCount++;
-                else activeCount++;
-
-                if (filter === 'active' && (isUnused || isExpired)) return false;
-                if (filter === 'unused' && !isUnused) return false;
-                if (filter === 'expired' && !isExpired) return false;
-
-                return k.key.toLowerCase().includes(search) || k.note.toLowerCase().includes(search) || (k.hwid && k.hwid.toLowerCase().includes(search));
-            });
-
-            document.getElementById('statTotal').innerText = total;
-            document.getElementById('statActive').innerText = activeCount;
-            document.getElementById('statUnused').innerText = unusedCount;
-            document.getElementById('statExpired').innerText = expiredCount;
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">ไม่พบข้อมูล Key ในระบบ</td></tr>`;
+            if (!data) {
+                list.innerHTML = "<tr><td colspan='3' style='text-align:center;'>ยังไม่มีคีย์ในระบบ</td></tr>";
                 return;
             }
 
-            filtered.forEach(k => {
-                const isUnused = k.activatedAt === null;
-                const isExpired = k.expiresAt !== null && Date.now() > k.expiresAt;
-                
-                let statusBadge = '';
-                if (k.durationDays === 0) {
-                    statusBadge = `<span class="px-2.5 py-1 bg-amber-950/80 text-amber-400 border border-amber-800 rounded-full text-xs font-semibold">ถาวร (Permanent)</span>`;
-                } else if (isUnused) {
-                    statusBadge = `<span class="px-2.5 py-1 bg-yellow-950/80 text-yellow-400 border border-yellow-800 rounded-full text-xs font-semibold">ยังไม่ใช้งาน (รอนับเวลา)</span>`;
-                } else if (isExpired) {
-                    statusBadge = `<span class="px-2.5 py-1 bg-rose-950/80 text-rose-400 border border-rose-800 rounded-full text-xs font-semibold">หมดอายุแล้ว</span>`;
-                } else {
-                    statusBadge = `<span class="px-2.5 py-1 bg-emerald-950/80 text-emerald-400 border border-emerald-800 rounded-full text-xs font-semibold">กำลังใช้งาน</span>`;
+            for (let id in data) {
+                let item = data[id];
+                let now = Date.now();
+                let statusColor = "#10b981";
+                let statusText = "ใช้งานได้ปกติ";
+
+                if (item.expireTime > 0 && now > item.expireTime) {
+                    statusColor = "#ef4444";
+                    statusText = "หมดอายุแล้ว";
+                } else if (item.hwid && item.hwid !== "") {
+                    statusText = "ถูกใช้งานแล้ว";
                 }
 
-                let timeDisplay = '';
-                if (k.durationDays === 0) {
-                    timeDisplay = `<span class="text-amber-300">ไม่มีวันหมดอายุ (ถาวร)</span>`;
-                } else if (isUnused) {
-                    timeDisplay = `<span class="text-gray-500">เวลาจะเริ่มนับเมื่อรันครั้งแรก</span>`;
-                } else {
-                    timeDisplay = `<div class="text-emerald-300 font-medium">${formatTimeRemaining(k.expiresAt)}</div><div class="text-[10px] text-gray-400 mt-0.5">หมด: ${new Date(k.expiresAt).toLocaleString('th-TH')}</div>`;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-red-950/20 transition">
-                        <td class="p-4">
-                            <div class="font-mono font-bold text-red-200 flex items-center gap-2">
-                                ${k.key}
-                                <button onclick="copyKey('${k.key}')" class="text-gray-400 hover:text-white text-xs bg-red-900/40 px-2 py-0.5 rounded border border-red-700/50"><i class="fa-regular fa-copy"></i></button>
-                            </div>
-                            <div class="text-xs text-gray-400 mt-0.5"><i class="fa-solid fa-tag mr-1 text-red-500"></i>${k.note}</div>
-                        </td>
-                        <td class="p-4 text-xs text-gray-300">
-                            ${k.durationDays === 0 ? 'ถาวร' : k.durationDays + ' วัน'}
-                        </td>
-                        <td class="p-4">
-                            ${statusBadge}
-                        </td>
-                        <td class="p-4 text-xs font-mono">
-                            ${k.hwid ? `<span class="text-amber-300 bg-amber-950/40 px-2 py-1 rounded border border-amber-900/50">${k.hwid}</span>` : `<span class="text-gray-500">ยังไม่ผูก HWID</span>`}
-                        </td>
-                        <td class="p-4 text-xs">
-                            ${timeDisplay}
-                        </td>
-                        <td class="p-4 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick="resetKeyTime(${k.id})" title="รีเซ็ต/ต่ออายุเวลาคีย์" class="p-2 bg-blue-950/50 hover:bg-blue-900 text-blue-400 rounded-lg border border-blue-800/60 transition"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                                <button onclick="resetHwid(${k.id})" title="รีเซ็ต HWID (ปลดล็อคเครื่อง)" class="p-2 bg-amber-950/50 hover:bg-amber-900 text-amber-400 rounded-lg border border-amber-800/60 transition"><i class="fa-solid fa-rotate-right"></i></button>
-                                <button onclick="deleteKey(${k.id})" title="ลบคีย์" class="p-2 bg-rose-950/50 hover:bg-rose-900 text-rose-400 rounded-lg border border-rose-800/60 transition"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        // Real-time countdown refresh
-        setInterval(() => {
-            if (localStorage.getItem('samurai_auth') === 'true') {
-                renderTable();
+                let row = `<tr>
+                    <td>
+                        <strong style="color:#60a5fa; font-size: 10px;">${item.key}</strong><br>
+                        <span style="color:${statusColor};">${statusText}</span>
+                    </td>
+                    <td>
+                        <small>ใช้เมื่อ: ${item.usedAt ? new Date(item.usedAt).toLocaleString() : 'ยังไม่เคยใช้'}</small><br>
+                        <small>HWID: ${item.hwid ? item.hwid : 'ไม่มี (ยังไม่ผูกเครื่อง)'}</small>
+                    </td>
+                    <td>
+                        <button class="btn-warning" onclick="resetHwid('${id}')">รีเซ็ตไอดี</button><br>
+                        <button class="btn-danger" onclick="deleteKey('${id}')">ลบ</button>
+                    </td>
+                </tr>`;
+                list.innerHTML += row;
             }
-        }, 1000);
-    </script>
+        });
+    }
+
+    function deleteKey(keyId) {
+        if (confirm("ต้องการลบคีย์นี้ใช่หรือไม่?")) {
+            db.ref('keys/' + keyId).remove();
+        }
+    }
+
+    function resetHwid(keyId) {
+        if (confirm("ต้องการรีเซ็ตไอดีเครื่อง (HWID) ของคีย์นี้ใช่หรือไม่?")) {
+            db.ref('keys/' + keyId).update({
+                hwid: "",
+                usedAt: ""
+            });
+            alert("รีเซ็ตไอดีเครื่องสำเร็จ!");
+        }
+    }
+</script>
+
 </body>
 </html>
