@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AttackHub Admin Panel - Pro (2-Tier Login)</title>
+    <title>Real Hub Admin Panel - Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        body { background-color: #09090b; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding-top: 30px; margin: 0; }
-        .container { background-color: #18181b; padding: 25px; border-radius: 16px; width: 480px; border: 1px solid #27272a; box-sizing: border-box; }
-        h2 { margin-bottom: 15px; color: #3b82f6; text-align: center; }
-        label { display: block; font-size: 12px; margin-bottom: 5px; color: #a1a1aa; }
-        input, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #3f3f46; background: #27272a; color: white; box-sizing: border-box; }
-        button { background-color: #3b82f6; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background-color: #2563eb; }
+        body { background-color: #050507; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding-top: 30px; margin: 0; }
+        .container { background-color: #0f0f14; padding: 25px; border-radius: 16px; width: 480px; border: 1px solid rgba(220, 38, 38, 0.3); box-shadow: 0 10px 30px -10px rgba(220, 38, 38, 0.2); box-sizing: border-box; }
+        h2 { margin-bottom: 15px; color: #ef4444; text-align: center; }
+        label { display: block; font-size: 12px; margin-bottom: 5px; color: #fca5a5; }
+        input, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #7f1d1d; background: #18181b; color: white; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: #ef4444; }
+        button { background-color: #dc2626; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #b91c1c; }
         table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 11px; }
         th, td { border: 1px solid #27272a; padding: 8px; text-align: left; word-break: break-all; }
-        th { background: #27272a; color: #3b82f6; }
+        th { background: #18181b; color: #ef4444; }
         .btn-danger { background-color: #ef4444; width: auto; padding: 4px 8px; font-size: 10px; margin: 0; }
-        .btn-warning { background-color: #f59e0b; width: auto; padding: 4px 8px; font-size: 10px; margin: 2px 0; }
-        .error-msg { color: #ef4444; font-size: 11px; text-align: center; margin-bottom: 10px; display: none; }
+        .btn-warning { background-color: #d97706; width: auto; padding: 4px 8px; font-size: 10px; margin: 2px 0; }
+        .error-msg { color: #f87171; font-size: 11px; text-align: center; margin-bottom: 10px; display: none; }
+        .logo-img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; border: 2px solid #dc2626; display: block; margin: 0 auto 10px auto; }
     </style>
 </head>
 <body>
@@ -27,7 +29,8 @@
 <div class="container">
     <!-- หน้าล็อคอิน 2 ชั้น -->
     <div id="loginPanel">
-        <h2>Admin Login (2-Tier)</h2>
+        <img src="https://i.postimg.cc/qg8hrLc7/qg8hrLc7.png" alt="Real Hub Logo" class="logo-img">
+        <h2>Real Hub Admin</h2>
         <label>รหัสผ่านชั้นที่ 1:</label>
         <input type="password" id="tier1Password" placeholder="ใส่รหัสผ่านชั้นที่ 1...">
         
@@ -40,7 +43,8 @@
 
     <!-- หน้าจัดการคีย์ -->
     <div id="adminPanel" style="display:none;">
-        <h2>AttackHub Key Management</h2>
+        <img src="https://i.postimg.cc/qg8hrLc7/qg8hrLc7.png" alt="Real Hub Logo" class="logo-img" style="width: 48px; height: 48px;">
+        <h2>Real Hub Key Management</h2>
         
         <label>เลือกอายุของคีย์:</label>
         <select id="keyDuration">
@@ -52,7 +56,7 @@
         </select>
         <button onclick="createKey()">สร้างคีย์ใหม่</button>
 
-        <h3 style="font-size: 14px; margin-top: 20px;">รายการคีย์ทั้งหมดในระบบ</h3>
+        <h3 style="font-size: 14px; margin-top: 20px; color: #fca5a5;">รายการคีย์ทั้งหมดในระบบ</h3>
         <div style="max-height: 350px; overflow-y: auto;">
             <table>
                 <thead>
@@ -63,11 +67,11 @@
                     </tr>
                 </thead>
                 <tbody id="keyList">
-                    <!-- โหลดข้อมูลจาก Firebase -->
+                    <!-- โหลดข้อมูลจาก Firebase (แยกฐานข้อมูล Real Hub) -->
                 </tbody>
             </table>
         </div>
-        <button onclick="logout()" style="background-color: #3f3f46; margin-top: 15px;">ออกจากระบบ</button>
+        <button onclick="logout()" style="background-color: #27272a; border: 1px solid #7f1d1d; margin-top: 15px;">ออกจากระบบ</button>
     </div>
 </div>
 
@@ -89,7 +93,7 @@
 
     // ตรวจสอบสถานะการล็อกอินค้างไว้ในเบราว์เซอร์
     window.onload = function() {
-        if (localStorage.getItem("attack_auth") === "true") {
+        if (localStorage.getItem("realhub_auth") === "true") {
             document.getElementById("loginPanel").style.display = "none";
             document.getElementById("adminPanel").style.display = "block";
             loadKeys();
@@ -102,7 +106,7 @@
         const errorEl = document.getElementById("loginError");
 
         if (t1 === TIER1_PASS && t2 === TIER2_PASS) {
-            localStorage.setItem("attack_auth", "true");
+            localStorage.setItem("realhub_auth", "true");
             document.getElementById("loginPanel").style.display = "none";
             document.getElementById("adminPanel").style.display = "block";
             loadKeys();
@@ -112,7 +116,7 @@
     }
 
     function logout() {
-        localStorage.removeItem("attack_auth");
+        localStorage.removeItem("realhub_auth");
         location.reload();
     }
 
@@ -128,14 +132,16 @@
             return result;
         };
 
-        const newKey = "attack-" + randomPart(7) + "-" + randomPart(6) + "-" + randomPart(5) + "-" + randomPart(5);
+        // เปลี่ยน Prefix เป็น realhub เพื่อแยกข้อมูลไม่ให้ชนกับ Attack Hub
+        const newKey = "realhub-" + randomPart(7) + "-" + randomPart(6) + "-" + randomPart(5) + "-" + randomPart(5);
         
         let expireTime = 0;
         if (days > 0) {
             expireTime = Date.now() + (days * 86400000);
         }
 
-        db.ref('keys/' + newKey).set({
+        // บันทึกลง path 'realhub_keys' แยกจากเดิม
+        db.ref('realhub_keys/' + newKey).set({
             key: newKey,
             expireTime: expireTime,
             hwid: "",
@@ -146,7 +152,8 @@
     }
 
     function loadKeys() {
-        db.ref('keys').on('value', (snapshot) => {
+        // ดึงข้อมูลจาก path 'realhub_keys'
+        db.ref('realhub_keys').on('value', (snapshot) => {
             const list = document.getElementById("keyList");
             list.innerHTML = "";
             const data = snapshot.val();
@@ -159,11 +166,11 @@
             for (let id in data) {
                 let item = data[id];
                 let now = Date.now();
-                let statusColor = "#10b981";
+                let statusColor = "#34d399";
                 let statusText = "ใช้งานได้ปกติ";
 
                 if (item.expireTime > 0 && now > item.expireTime) {
-                    statusColor = "#ef4444";
+                    statusColor = "#f87171";
                     statusText = "หมดอายุแล้ว";
                 } else if (item.hwid && item.hwid !== "") {
                     statusText = "ถูกใช้งานแล้ว";
@@ -171,7 +178,7 @@
 
                 let row = `<tr>
                     <td>
-                        <strong style="color:#60a5fa; font-size: 10px;">${item.key}</strong><br>
+                        <strong style="color:#fca5a5; font-size: 10px;">${item.key}</strong><br>
                         <span style="color:${statusColor};">${statusText}</span>
                     </td>
                     <td>
@@ -190,13 +197,13 @@
 
     function deleteKey(keyId) {
         if (confirm("ต้องการลบคีย์นี้ใช่หรือไม่?")) {
-            db.ref('keys/' + keyId).remove();
+            db.ref('realhub_keys/' + keyId).remove();
         }
     }
 
     function resetHwid(keyId) {
         if (confirm("ต้องการรีเซ็ตไอดีเครื่อง (HWID) ของคีย์นี้ใช่หรือไม่?")) {
-            db.ref('keys/' + keyId).update({
+            db.ref('realhub_keys/' + keyId).update({
                 hwid: "",
                 usedAt: ""
             });
